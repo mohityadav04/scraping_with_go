@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"encoding/json"
+	"log"
 )
 
 
@@ -17,7 +18,7 @@ type Record struct{
 func (r *Record) ToJSON() []byte {
 	data, err := json.Marshal(r)
 	if err != nil {
-		panic("Not able to convert the record to json")
+		log.Panic("Not able to convert the record to json")
 	}
 	return data
 }

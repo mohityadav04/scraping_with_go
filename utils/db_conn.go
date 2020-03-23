@@ -3,9 +3,10 @@ package utils
 import (
 	"sync"
 	"context"
+	"log"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 )
 
 type client map[string]*mongo.Client
@@ -16,8 +17,9 @@ var (
 )
 
 func GetDBClient() *mongo.Client {
+	config := GetConfig()
 	once.Do(func(){
-		clientOptions := options.Client().ApplyURI("mongodb://db:27017/?connect=direct")
+		clientOptions := options.Client().ApplyURI("mongodb://"+config["mongoAddress"]+"/?connect=direct")
 		conn, err := mongo.Connect(context.TODO(), clientOptions)
 
 		if err != nil {

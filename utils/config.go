@@ -6,11 +6,11 @@ func GetConfig() KVStore {
 	KVStoreInstance := make(KVStore)
 	
 	const (
-		mongoPort = "27017"
+		mongoAddress = "db:27017"
 		appPort = "5000"
 	)
 
-	KVStoreInstance["mongoPort"] = mongoPort
+	KVStoreInstance["mongoAddress"] = mongoAddress
 	KVStoreInstance["appPort"] = appPort
 	KVStoreInstance["success"] = "SUCCESS"
 	KVStoreInstance["failure"] = "FAILURE"
