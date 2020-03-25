@@ -39,7 +39,7 @@ func (mdb MongoDBLayer) CreateOrUpdateRecord(record Record, collection string) e
 			"description": record.Description,
 			"price": record.ProductPrice,
 			"totalreviews": record.TotalReviews,
-			"lastupdatedat": time.Now().String(),
+			"lastupdatedat": time.Now().Format("01-02-2006 15:04:05"),
 		},
 	}
 
@@ -50,7 +50,7 @@ func (mdb MongoDBLayer) CreateOrUpdateRecord(record Record, collection string) e
 	}
 
 	if updateResult.MatchedCount == 0 {
-		record.CreatedAt = time.Now().String()
+		record.CreatedAt = time.Now().Format("01-02-2006 15:04:05")
 		_, err := dbCollection.InsertOne(context.TODO(), record)
 		if err != nil {
 			log.Panicln("Database write error")

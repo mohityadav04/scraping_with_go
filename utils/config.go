@@ -6,7 +6,7 @@ func GetConfig() KVStore {
 	KVStoreInstance := make(KVStore)
 	
 	const (
-		mongoAddress = "localhost:27017"
+		mongoAddress = "mongo:8888"
 		appPort = "5000"
 		appHost = "localhost"
 		mongoDatabase = "amazon"
