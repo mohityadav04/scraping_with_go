@@ -7,12 +7,8 @@ import(
 	"bytes"
 	"strings"
 	"strconv"
-	// "fmt"
+	
 	"github.com/gocolly/colly/v2"
-	"time"
-	// "go.mongodb.org/mongo-driver/mongo"
-	// "time"
-	// _ "go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/scraping_with_go/utils"
 
@@ -78,16 +74,14 @@ func ScraperHandler(w http.ResponseWriter, r *http.Request){
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println("Invalid URL Found")
 		w.Write([]byte(`{ "Error": "invalid URL" }`))
+	
 		return
 	}
-	// c.OnRequest(func(r *colly.Request) {
-	// 	fmt.Println("Called visit scraper....")
-	// })
-	c.Limit(&colly.LimitRule{
-        DomainGlob:  "*",
-        RandomDelay: 5 * time.Second,
-    })
-
+	c.OnRequest(func(r *colly.Request) {
+		r.Headers.Set(
+			"User-Agent", 
+			"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36")
+	})
 
 	c.OnHTML("div#ppd", func(e *colly.HTMLElement){
 		// product name

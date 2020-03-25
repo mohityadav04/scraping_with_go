@@ -1,7 +1,6 @@
 package scraper
 
 import (
-	// "fmt"
 	"log"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"

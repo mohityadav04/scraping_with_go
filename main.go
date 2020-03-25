@@ -9,15 +9,10 @@ import(
 
 	"github.com/scraping_with_go/scraper"
 	"github.com/scraping_with_go/utils"
-	// "go.mongodb.org/mongo-driver/bson"
-	// "go.mongodb.org/mongo-driver/bson/primitive"
-	// "github.com/scraping_with_go/utils"
 
 )
 
 func main(){
-	// fmt.Println("Hello")
-	// fmt.Printf("%T", utils.GetDBClient())
 
 	r := mux.NewRouter()
 	config := utils.GetConfig()
