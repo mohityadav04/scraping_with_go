@@ -3,6 +3,7 @@ Steps to run:
 2. Make sure you have docker and docker-compose installed on your machine.
 3. Once you are in root directory of project run command: `docker-compose up` or `sudo docker-compose up`
 4. App runs on port **5000**.
+5. API only accepts product page url of amazon.
 
 
 Curl commands:
