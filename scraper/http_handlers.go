@@ -7,9 +7,10 @@ import(
 	"bytes"
 	"strings"
 	"strconv"
-	
+	// "fmt"
 	"github.com/gocolly/colly/v2"
-	"go.mongodb.org/mongo-driver/mongo"
+	"time"
+	// "go.mongodb.org/mongo-driver/mongo"
 	// "time"
 	// _ "go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -17,21 +18,29 @@ import(
 
 )
 
-var dbClient *mongo.Client = utils.GetDBClient()
-var dBLayer DBLayer = MongoDBLayer{dbClient}
+var dbClient = utils.GetDBClient()
+var dBLayer = MongoDBLayer{dbClient}
 
 func GetDBRecordsHandler(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("content-type", "application/json")
+
 	log.Println("recieved request to read records")
-	records, err := dBLayer.ReadAllRecords("amazon", "products")
+
+	records, err := dBLayer.ReadAllRecords("products")
 	
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Panicln("Error getting records from database" + err.Error())
 		w.Write([]byte(`{ "message": "` + err.Error() + `" }`))
 		return
 	}
 
-	w.Header().Set("content-type", "application/json")
+
+	w.WriteHeader(http.StatusOK)
+	if len(records) == 0 {
+		w.Write([]byte("[]"))
+		return
+	}
+
 	json.NewEncoder(w).Encode(records)
 }
 
@@ -40,18 +49,17 @@ func CreateDBRecordHandler(w http.ResponseWriter, r *http.Request){
 	var rec Record
 	_ = json.NewDecoder(r.Body).Decode(&rec)
 
-	err := dBLayer.CreateRecord(rec, "amazon", "products")
+	err := dBLayer.CreateOrUpdateRecord(rec, "products")
 	
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Panicln("Error creating record in database" + err.Error())
 		w.Write([]byte(`{ "message": "` + err.Error() + `" }`))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(rec)
-
 
 }
 
@@ -63,20 +71,23 @@ func ScraperHandler(w http.ResponseWriter, r *http.Request){
 	urlToProcess := rec.Url
 	c := colly.NewCollector()
 
-	isUrlValid, err := utils.ValidateURL(urlToProcess)
+	urlMatchForProductPage := utils.ValidateURL(urlToProcess)
+	rec.ProductId = urlMatchForProductPage[4:]
 
-	if err != nil {
+	if urlMatchForProductPage == "" {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Panicln("Problem parsing URL")
-		w.Write([]byte(`{ "Error": "can not parse URL" }`))		
+		log.Println("Invalid URL Found")
+		w.Write([]byte(`{ "Error": "invalid URL" }`))
 		return
 	}
-	if isUrlValid == false {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Panicln("Invalid URL Found")
-		w.Write([]byte(`{ "Error": "invalid URL" }`))	
-		return
-	}
+	// c.OnRequest(func(r *colly.Request) {
+	// 	fmt.Println("Called visit scraper....")
+	// })
+	c.Limit(&colly.LimitRule{
+        DomainGlob:  "*",
+        RandomDelay: 5 * time.Second,
+    })
+
 
 	c.OnHTML("div#ppd", func(e *colly.HTMLElement){
 		// product name
@@ -84,23 +95,47 @@ func ScraperHandler(w http.ResponseWriter, r *http.Request){
 
 		// image URL
 		productImagesMap := make(map[string] interface{})
-		allImagesOfProduct := e.ChildAttr(`img#landingImage`, "data-a-dynamic-image")
+		allImagesOfProduct := e.ChildAttr("img#landingImage", "data-a-dynamic-image")
 		_ = json.Unmarshal([]byte(allImagesOfProduct), &productImagesMap)
 
-		for k, _ := range productImagesMap{
-			rec.ImageUrl = k
+		for pImage, _ := range productImagesMap{
+			rec.ImageUrl = pImage
 			break
 		}
 
 		// price
-		// TODO: missing product price handle
-		rec.ProductPrice = e.ChildText(`span#priceblock_ourprice`)
-		if rec.ProductPrice == "" {
+		if e.ChildText("#priceblock_ourprice") == "" {
+
+			if e.ChildText("#priceblock_dealprice") == "" {
+
+				e.ForEach("div#olp_feature_div", func(_ int, usedPriceDiv *colly.HTMLElement){
+
+					if usedPriceDiv.ChildText(".a-color-price") == "" {
+
+						e.ForEach("div#buybox", func(_ int, buyBoxPriceDiv *colly.HTMLElement){
+							if buyBoxPriceDiv.ChildText(".a-color-price") == "" {
+								rec.ProductPrice = "-1"
+							} else {
+								rec.ProductPrice = buyBoxPriceDiv.ChildText(".a-color-price")
+							}
+						})
+					} else {
+						rec.ProductPrice = usedPriceDiv.ChildText(".a-color-price")
+					}
+				})
+			} else {
+				rec.ProductPrice = e.ChildText("span#priceblock_dealprice")
+			}
+		} else {
+			rec.ProductPrice = e.ChildText("span#priceblock_ourprice")
+		}
+		//check if price from HTML got only string and replace it with missing label
+		if utils.MatchPrice(rec.ProductPrice) == "" {
 			rec.ProductPrice = "-1"
 		}
 
 		// reviews
-		customerReviewes := strings.Split(e.ChildText(`span#acrCustomerReviewText`), " ")
+		customerReviewes := strings.Split(e.ChildText("span#acrCustomerReviewText"), " ")
 		if len(customerReviewes) != 0 {
 			rev, err := strconv.Atoi(strings.Trim(customerReviewes[0], " "))
 			if err != nil {
@@ -120,22 +155,26 @@ func ScraperHandler(w http.ResponseWriter, r *http.Request){
 				pdesc = append(pdesc, cleanedText)
 			})
 		})
-		rec.Description = strings.Join(pdesc[1:], "")
-
+		// remove unnecessary details
+		if len(pdesc) > 1 {
+			rec.Description = strings.Join(pdesc[1:], "")
+		}
 	})
 	c.Visit(urlToProcess)
+
+	w.Header().Set("Content-Type", "application/json")
+	err := POSTRecordAPI(rec)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Panicln("Error sending request to create record in database" + err.Error())
+		w.Write([]byte(`{ "Error": "Not able to process request to save in DB" }`))
+		return
+	}
 
 	log.Println("Scraping complete. Result is:")
 	log.Println(rec)
 
-	w.Header().Set("Content-Type", "application/json")
-	err = POSTRecordAPI(rec)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Panicln("Error sending request to create record in database" + err.Error())
-		w.Write([]byte(`{ "Error": "Not able to process request" }`))
-		return
-	}
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(rec)
 
 }
@@ -145,7 +184,10 @@ func POSTRecordAPI(record Record) error {
 	config := utils.GetConfig()
 
 	log.Print("Preparaing to send request to create database record after scraping")
-	req, err := http.NewRequest("POST", "http://localhost:"+ config["appPort"] +"/products/", bytes.NewBuffer(record.ToJSON()))
+	req, err := http.NewRequest(
+					"POST", 
+					"http://" + config["appHost"] + ":"+ config["appPort"] +"/products/", 
+					bytes.NewBuffer(record.ToJSON()))
 	req.Header.Add("Content-Type", "application/json")
 
 	if err != nil {

@@ -5,6 +5,8 @@ golint <file_name>
 lower case named variable/func will not be imported to other packages
 
 
+sudo docker-compose up
+
 
 https://www.calhoun.io/connecting-to-a-postgresql-database-with-gos-database-sql-package/
 
@@ -39,4 +41,36 @@ TEST URLs:
 
 2. https://www.amazon.com/dp/B01MSYY5X5/ref=sspa_dk_detail_0?psc=1&pd_rd_i=B01MSYY5X5&pd_rd_w=kZDyS&pf_rd_p=48d372c1-f7e1-4b8b-9d02-4bd86f5158c5&pd_rd_wg=L5Rnx&pf_rd_r=TQW2WNQ435HVQ3QAKJNC&pd_rd_r=98b411e2-20d0-4e65-82fe-1ec15670f5f7&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEyNFoyUjBGWTlDNlJQJmVuY3J5cHRlZElkPUEwNDQ1NzMzMkpCVzZUNVIwTzRJNiZlbmNyeXB0ZWRBZElkPUEwNzMxNzAzQUdSSU5WWEdRVDFMJndpZGdldE5hbWU9c3BfZGV0YWlsJmFjdGlvbj1jbGlja1JlZGlyZWN0JmRvTm90TG9nQ2xpY2s9dHJ1ZQ==
 
-3. https://www.amazon.com/dp/B01MF9DLQW/ref=dp_cr_wdg_tit_nw_mr
+3.  https://www.amazon.com/dp/B01MF9DLQW/ref=dp_cr_wdg_tit_nw_mr
+
+4. New or Used product: https://www.amazon.com/PlayStation-4-Pro-1TB-Console/dp/B01LOP8EZC/?th=1
+
+
+
+Observations:
+If product is not available in stock, only productId,title,image,description
+Its possible that new products has no reviews.
+Navigation to product page from possible paths(category,offers-listing) always result in an URL which has **/dp/<10-alphanum-string>**
+
+No description:https://www.amazon.in/GRAND-THEFT-AUTO-PREMIUM-PS4/dp/B07H3TF8L7/ref=sr_1_1?keywords=playstation+4+console&qid=1585069135&s=computers&sr=1-1-catcorr
+
+Missing Price Label: "-1"
+
+Category Page:
+https://www.amazon.co.uk/gp/browse.html?node=229816&ref_=nav_em_0_2_3_8_dmm_cds_vinyl
+
+India:
+https://www.amazon.in/GRAND-THEFT-AUTO-PREMIUM-PS4/dp/B07H3TF8L7/ref=sr_1_1?keywords=playstation+4+console&qid=1585069135&s=computers&sr=1-1-catcorr
+
+Uk:
+https://www.amazon.co.uk/Amazon-Fire-TV-Stick-Streaming-Media-Player-Alexa/dp/B0791RGQW3/ref=zg_bs_electronics_home_1?_encoding=UTF8&psc=1&refRID=H69J97WR0823AQFGJWNM
+
+
+curl -X POST \
+  http://localhost:5000/resources/ \
+  -H 'Content-Type: application/json' \
+  -d '{
+	"url": "https://www.amazon.in/dp/B07S8D1K3M/ref=fs_a_mn_2/262-6826485-0566068"
+}'
+
+Make sure any other mongo demon is shut down

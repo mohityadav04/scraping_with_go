@@ -5,7 +5,6 @@ services:
     ports:
      - "5000:5000"
 
-  db:
-    image: mongo
-    ports:
-     - "27017:27017"
+  mongo:
+    image: mongo:latest
+    command: mongod --port 8888
