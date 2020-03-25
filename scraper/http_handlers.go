@@ -7,7 +7,7 @@ import(
 	"bytes"
 	"strings"
 	"strconv"
-	
+
 	"github.com/gocolly/colly/v2"
 
 	"github.com/scraping_with_go/utils"
@@ -160,7 +160,6 @@ func ScraperHandler(w http.ResponseWriter, r *http.Request){
 	err := POSTRecordAPI(rec)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Panicln("Error sending request to create record in database" + err.Error())
 		w.Write([]byte(`{ "Error": "Not able to process request to save in DB" }`))
 		return
 	}
@@ -168,8 +167,15 @@ func ScraperHandler(w http.ResponseWriter, r *http.Request){
 	log.Println("Scraping complete. Result is:")
 	log.Println(rec)
 
+	dbRecord, err := dBLayer.ReadARecordByProductId(rec.ProductId, "products")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "Error": "there seems to be some problem conncting to database"`))
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(rec)
+	json.NewEncoder(w).Encode(dbRecord)
 
 }
 
@@ -185,13 +191,13 @@ func POSTRecordAPI(record Record) error {
 	req.Header.Add("Content-Type", "application/json")
 
 	if err != nil {
-		log.Panicln("Error in creating request")
+		log.Panicln("Error in creating request" + err.Error())
 		return err
 	}
 	
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Panicln("couldn't send sending request")
+		log.Panicln("couldn't send sending request" + err.Error())
 		return err
 	}
 	defer resp.Body.Close()

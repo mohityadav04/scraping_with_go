@@ -1,7 +1,7 @@
 Steps to run:
 1. Clone the repo.
 2. Make sure you have docker and docker-compose installed on your machine.
-3. Run command: `docker-compose up` or `sudo docker-compose up`
+3. Once you are in root directory of project run command: `docker-compose up` or `sudo docker-compose up` 
 
 
 Curl commands:
@@ -29,6 +29,8 @@ API doc:
           "description": <>
           "price": <>
           "reviews": <>
+          "createdat": <>
+          "lastupdatedat": <>
         }`
 
 TEST URLs:
