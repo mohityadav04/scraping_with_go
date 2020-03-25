@@ -1,7 +1,8 @@
 Steps to run:
 1. Clone the repo.
 2. Make sure you have docker and docker-compose installed on your machine.
-3. Once you are in root directory of project run command: `docker-compose up` or `sudo docker-compose up` 
+3. Once you are in root directory of project run command: `docker-compose up` or `sudo docker-compose up`
+4. App runs on port **5000**.
 
 
 Curl commands:
@@ -13,14 +14,15 @@ Curl commands:
 
 
 API doc:
-1. POST http://localhost:5000/resources/
-   Header: `Content:` `application/json`
+1. POST http://localhost:5000/resources/  <br />
+   Header: `Content:` `application/json`  <br />
    Body: `
         {
           "url": "https://www.amazon.com/dp/B01MF9DLQW/ref=dp_cr_wdg_tit_nw_mr"
         }`
-2. GET http://localhost:5000/products/
-   Body:`
+2. GET http://localhost:5000/products/  <br />
+   Body:  
+        `
         {
           "url": <>
           "productid": <>
@@ -51,8 +53,9 @@ Assumptions:
 1. URL contain product-ids
 
 Observations:
-Navigation to product page from possible paths(category,offers-listing) always result in an URL which has **/dp/<10-alphanum-string>**
-If product is not available in stock, only productId,title,image,description
-Its possible that new products has no reviews.
-some products have no description
+1. Navigation to product page from possible paths(category,offers-listing) always result in an URL which has **/dp/<10-alphanum-string>**
+2. If product is not available in stock, only productId,title,image,description
+3. Its possible that new products has no reviews.
+4. some products have no description
+5. Had to use user-agent to scrape websites from other countries.
 
