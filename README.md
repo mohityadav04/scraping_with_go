@@ -57,5 +57,5 @@ Observations:
 2. If product is not available in stock, only productId,title,image,description
 3. Its possible that new products has no reviews.
 4. some products have no description
-5. Had to use user-agent to scrape websites from other countries.
+5. Had to use user-agent to scrape websites from other countries because it is used to mock the browser's call.
 
