@@ -10,6 +10,7 @@ import (
 )
 
 var config = utils.GetConfig()
+const DATE_FORMAT = "01-02-2006 15:04:05"
 
 type DBLayer interface{
 	CreateOrUpdateRecord(record Record, collection string) error
@@ -39,7 +40,7 @@ func (mdb MongoDBLayer) CreateOrUpdateRecord(record Record, collection string) e
 			"description": record.Description,
 			"price": record.ProductPrice,
 			"totalreviews": record.TotalReviews,
-			"lastupdatedat": time.Now().Format("01-02-2006 15:04:05"),
+			"lastupdatedat": time.Now().Format(DATE_FORMAT),
 		},
 	}
 
@@ -50,7 +51,7 @@ func (mdb MongoDBLayer) CreateOrUpdateRecord(record Record, collection string) e
 	}
 
 	if updateResult.MatchedCount == 0 {
-		record.CreatedAt = time.Now().Format("01-02-2006 15:04:05")
+		record.CreatedAt = time.Now().Format(DATE_FORMAT)
 		_, err := dbCollection.InsertOne(context.TODO(), record)
 		if err != nil {
 			log.Panicln("Database write error")
